@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as Tone from 'tone';
 import { 
   Music, Settings, Mic, Play, Square, Volume2, Trash2, 
   Activity, Sliders, Wand2, Disc, Headphones, 
-  Download, XCircle, History, AudioWaveform, Zap, Clock, ChevronRight, CheckCircle2, ShieldCheck, Layers, SwapHorizontal
+  Download, XCircle, History, AudioWaveform, Zap, Clock, ChevronRight, CheckCircle2, ShieldCheck, Layers, ArrowLeftRight
 } from 'lucide-react';
 import { INSTRUMENTS, CATEGORIES } from './constants';
 import { Instrument, Category, WorkstationMode, RecordedNote, StudioSession } from './types';
@@ -517,6 +516,45 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* Landing Page - Se non ancora iniziato */}
+      {!isStarted && !isConfiguring && (
+        <div className="flex flex-col items-center justify-center py-20 text-center space-y-8 animate-in fade-in zoom-in duration-700">
+           <div className="relative">
+              <div className="absolute inset-0 bg-purple-500 blur-[100px] opacity-20" />
+              <div className="w-32 h-32 bg-zinc-900 rounded-[2.5rem] flex items-center justify-center border border-white/10 shadow-2xl relative z-10">
+                 <Mic size={50} className="text-purple-500" />
+              </div>
+           </div>
+           <div className="space-y-2">
+              <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-tight">Trasforma la tua voce <br/> in <span className="text-purple-500 underline decoration-zinc-800">puro suono</span></h2>
+              <p className="text-zinc-500 text-sm max-w-[280px] mx-auto font-medium">Sintetizzatore vocale real-time con motore a bassa latenza.</p>
+           </div>
+           <button 
+             onClick={startSetupWizard}
+             className="group relative px-12 py-6 bg-white text-black rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.1)]"
+           >
+              AVVIA WORKSTATION
+              <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-20 group-hover:hidden" />
+           </button>
+           <div className="flex items-center gap-6 text-zinc-600 pt-8">
+              <div className="flex flex-col items-center gap-1">
+                 <Zap size={16} />
+                 <span className="text-[8px] font-black uppercase">Low Latency</span>
+              </div>
+              <div className="w-[1px] h-4 bg-zinc-800" />
+              <div className="flex flex-col items-center gap-1">
+                 <Activity size={16} />
+                 <span className="text-[8px] font-black uppercase">Pitch Track</span>
+              </div>
+              <div className="w-[1px] h-4 bg-zinc-800" />
+              <div className="flex flex-col items-center gap-1">
+                 <Disc size={16} />
+                 <span className="text-[8px] font-black uppercase">Studio Rec</span>
+              </div>
+           </div>
+        </div>
+      )}
+
       {!showHistory && isStarted && !isConfiguring && (
         <div className="w-full animate-in fade-in duration-500 flex flex-col h-[calc(100vh-180px)]">
           {showSettings && (
@@ -712,18 +750,15 @@ const App: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <button 
                       onClick={() => playSessionMidi(s)}
-                      disabled={s.midiNotes.length === 0}
-                      className={`h-14 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${isPlayingBack === s.id + "_midi" ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 active:scale-95 disabled:opacity-20'}`}
+                      className={`flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-[10px] tracking-widest transition-all ${isPlayingBack === s.id + "_midi" ? 'bg-purple-600 text-white' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'}`}
                     >
-                      {isPlayingBack === s.id + "_midi" ? <Square size={14} fill="white" /> : <Play size={14} fill="currentColor" />}
-                      SYNTH
+                      <ArrowLeftRight size={14} /> PLAY SYNTH
                     </button>
                     <button 
                       onClick={() => playSessionAudio(s)}
-                      className={`h-14 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${isPlayingBack === s.id + "_audio" ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 active:scale-95'}`}
+                      className={`flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-[10px] tracking-widest transition-all ${isPlayingBack === s.id + "_audio" ? 'bg-emerald-600 text-white' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'}`}
                     >
-                      {isPlayingBack === s.id + "_audio" ? <Square size={14} fill="white" /> : <Mic size={14} />}
-                      VOICE
+                      <Mic size={14} /> PLAY VOICE
                     </button>
                   </div>
                 </div>
@@ -733,81 +768,32 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Persistent Status Bar */}
+      {/* FOOTER STATS */}
       {isStarted && (
-        <div className="fixed bottom-8 left-4 right-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 p-4 rounded-[2.5rem] flex items-center justify-between shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] z-[60] animate-in slide-in-from-bottom-8">
-          <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isRecording ? 'bg-red-600 shadow-lg shadow-red-600/20' : (mode === WorkstationMode.LIVE ? 'bg-purple-600 shadow-lg shadow-purple-600/20' : 'bg-zinc-800')}`}>
-              {isRecording ? <Disc size={20} className="animate-spin-slow" /> : (mode === WorkstationMode.LIVE ? <Activity size={20} /> : <Music size={20} />)}
+         <div className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-white/5 p-4 z-50">
+            <div className="max-w-lg mx-auto flex items-center justify-between">
+               <div className="flex gap-4">
+                  <div className="flex flex-col">
+                     <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Input Note</span>
+                     <span className="text-sm font-mono font-bold text-white leading-none">{getCleanNote(currentMidiNote)}</span>
+                  </div>
+                  <div className="w-[1px] h-6 bg-zinc-800 my-auto" />
+                  <div className="flex flex-col">
+                     <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Latency</span>
+                     <span className="text-sm font-mono font-bold text-emerald-500 leading-none">12ms</span>
+                  </div>
+               </div>
+               
+               <div className="flex items-center gap-3">
+                  <div className="text-right">
+                     <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest block">Sound Profile</span>
+                     <span className="text-[10px] font-black text-purple-500 uppercase truncate max-w-[100px]">{selectedInstrument.name}</span>
+                  </div>
+                  <div className={`w-3 h-3 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : (mode === WorkstationMode.LIVE ? 'bg-emerald-500' : 'bg-zinc-800')}`} />
+               </div>
             </div>
-            <div>
-              <div className="text-[10px] font-black uppercase leading-tight tracking-tight">
-                {isRecording ? 'RECORDING' : (mode === WorkstationMode.LIVE ? 'MONITOR' : 'IDLE')}
-              </div>
-              <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-tighter flex items-center gap-2 mt-0.5">
-                <span className={`w-1.5 h-1.5 rounded-full ${currentMidiNote !== null ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-800'}`} />
-                {currentMidiNote !== null ? `NOTE: ${safeMidiToNoteName(currentMidiNote)}` : '--'}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-[1px] h-8 bg-white/10 mx-2" />
-            <div className={`text-3xl font-mono font-black min-w-[50px] text-right transition-colors duration-75 italic tracking-tighter ${currentMidiNote !== null ? 'text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'text-zinc-800'}`}>
-              {getCleanNote(currentMidiNote)}
-            </div>
-          </div>
-        </div>
+         </div>
       )}
-
-      {!isStarted && !isConfiguring && (
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
-          <div className="relative mb-10">
-            <div className="absolute inset-0 bg-purple-600 blur-[100px] opacity-20 animate-pulse" />
-            <div className="w-28 h-28 bg-white text-black rounded-[3rem] flex items-center justify-center shadow-2xl relative rotate-3">
-              <Music className="w-14 h-14" />
-            </div>
-          </div>
-          <h2 className="text-5xl font-black mb-4 tracking-tighter uppercase italic leading-none">VocalStudio<br/><span className="text-purple-500">Pro</span></h2>
-          <p className="text-zinc-500 text-sm mb-12 max-w-[280px] leading-relaxed font-medium italic">Your voice is the ultimate instrument. Grouped by nature, refined by synthesis.</p>
-          
-          <button 
-            onClick={startSetupWizard}
-            className="w-full max-w-xs bg-white text-black py-7 rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-tighter shadow-2xl flex items-center justify-center gap-3"
-          >
-            Configura Microfono <ChevronRight size={24} />
-          </button>
-          
-          <div className="mt-12 flex items-center gap-6 text-[9px] font-black uppercase text-zinc-700 tracking-widest">
-            <div className="flex items-center gap-2"><Layers size={12} /> CATEGORIZED</div>
-            <div className="flex items-center gap-2"><Disc size={12} /> RECORD READY</div>
-            <div className="flex items-center gap-2"><Activity size={12} /> NOISE GATE</div>
-          </div>
-        </div>
-      )}
-      <style>{`
-        @keyframes progress {
-            from { width: 0%; }
-            to { width: 100%; }
-        }
-        .animate-progress {
-            animation: progress 5s linear forwards;
-        }
-        .animate-spin-slow {
-            animation: spin 6s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 };
